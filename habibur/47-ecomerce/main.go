@@ -6,7 +6,6 @@ import (
 	"net/http"
 )
 
-
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "Server is ok")
@@ -17,18 +16,23 @@ func handler(w http.ResponseWriter, r *http.Request) {
 - we define this way `json:"id"`
 */
 type Product struct {
-	ID          int `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
 	Price       float64 `json:"price"`
-	ImgUrl      string `json:"imageUrl"`
+	ImgUrl      string  `json:"imageUrl"`
 }
 
 var productList []Product
 
 func getProducts(w http.ResponseWriter, r *http.Request) {
+	/* Cors issue */
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	/* json issue */
+	w.Header().Set("Content-Type", "application/json")
+
 	if r.Method != "GET" { // r.Method = post, put , patch, delete
-		http.Error(w, "Invalid Api Methood", 400)
+		http.Error(w, "Invalid Api Method", 400)
 		return
 	}
 
@@ -37,14 +41,50 @@ func getProducts(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(productList)
 }
 
+func createProduct(w http.ResponseWriter, r *http.Request) {
+	/* Cors issue */
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Method", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	/* json issue */
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+
+	if r.Method != "POST" { // r.Method = post, put , patch, delete
+		http.Error(w, "Invalid Api Method", 400)
+		return
+	}
+
+	var newProduct Product
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&newProduct)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "input valid json", 400)
+		return
+	}
+
+	newProduct.ID = len(productList) + 1
+	productList = append(productList, newProduct)
+
+	w.WriteHeader(201)
+	encoder := json.NewEncoder(w)
+	encoder.Encode(newProduct)
+
+}
+
 func main() {
-	mux := http.NewServeMux()
+	mux := http.NewServeMux() // router
 
-	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/", handler) // route
 
-	mux.HandleFunc("/products", getProducts)
-
-
+	mux.HandleFunc("/products", getProducts) // route
+	mux.HandleFunc("/create-product", createProduct)
 
 	fmt.Println("Server running on :3000")
 
@@ -53,6 +93,10 @@ func main() {
 	if err != nil {
 		fmt.Println("Error starting the server", err)
 	}
+
+}
+
+func handleCors(w http.Request) {
 
 }
 
