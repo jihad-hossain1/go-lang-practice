@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 )
@@ -11,7 +13,7 @@ type Header struct {
 }
 
 type Payload struct {
-	Sub       string `json:"sub"`
+	Sub       int    `json:"sub"`
 	FirstName string `json:"firstName"`
 	Email     string `json:"email"`
 }
@@ -32,11 +34,20 @@ func CreateJwt(data Payload, secretKey string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	paloadB64 := base64UrlEncode(byteDataArr)
+	payloadB64 := base64UrlEncode(byteDataArr)
 
 	byteArrSecret := []byte(secretKey)
-	byteArrMessage := headerB64 + "." + paloadB64
+	byteArrMessage := headerB64 + "." + payloadB64
 
+	h := hmac.New(sha256.New, byteArrSecret)
+	h.Write([]byte(byteArrMessage))
+
+	signature := h.Sum(nil)
+	signatureB64 := base64UrlEncode(signature)
+
+	jwt := headerB64 + "." + payloadB64 + "." + signatureB64
+
+	return jwt, nil
 }
 
 func base64UrlEncode(data []byte) string {
