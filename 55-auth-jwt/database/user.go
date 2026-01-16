@@ -6,7 +6,7 @@ type User struct {
 	LastName    string `json:"lastName"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
-	IsShopOwner string `json:"isShopOwner"`
+	IsShopOwner bool   `json:"isShopOwner"`
 }
 
 var users []User

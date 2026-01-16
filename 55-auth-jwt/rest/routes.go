@@ -20,6 +20,6 @@ func initRoutes(mux *http.ServeMux, manager *middleware.Manager) {
 
 	// users api route
 	mux.Handle("POST /users", manager.With(http.HandlerFunc(user.CreateUser)))
-	mux.Handle("POST /users/login", manager.With(http.HandlerFunc(user.CreateUser)))
+	mux.Handle("POST /users/login", manager.With(http.HandlerFunc(user.LoginUser)))
 
 }

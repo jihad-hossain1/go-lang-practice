@@ -1,8 +1,6 @@
 package main
 
-import (
-	"ecom/cmd"
-)
+import "ecom/cmd"
 
 func main() {
 	cmd.Serve()

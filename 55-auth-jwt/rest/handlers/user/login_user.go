@@ -23,6 +23,10 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request Data ", http.StatusBadRequest)
 	}
 
-	createUser := newUser.Store()
-	util.SendData(w, createUser, http.StatusCreated)
+	usr := database.Find(reqLogin.Email, reqLogin.Password)
+	if usr == nil {
+		http.Error(w, "Invalid credential", http.StatusBadRequest)
+	}
+
+	util.SendData(w, usr, http.StatusAccepted)
 }
