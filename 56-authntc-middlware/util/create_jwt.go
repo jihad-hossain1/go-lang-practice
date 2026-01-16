@@ -28,13 +28,13 @@ func CreateJwt(data Payload, secretKey string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	headerB64 := base64UrlEncode(byteArr)
+	headerB64 := Base64UrlEncode(byteArr)
 
 	byteDataArr, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
-	payloadB64 := base64UrlEncode(byteDataArr)
+	payloadB64 := Base64UrlEncode(byteDataArr)
 
 	byteArrSecret := []byte(secretKey)
 	byteArrMessage := headerB64 + "." + payloadB64
@@ -43,13 +43,13 @@ func CreateJwt(data Payload, secretKey string) (string, error) {
 	h.Write([]byte(byteArrMessage))
 
 	signature := h.Sum(nil)
-	signatureB64 := base64UrlEncode(signature)
+	signatureB64 := Base64UrlEncode(signature)
 
 	jwt := headerB64 + "." + payloadB64 + "." + signatureB64
 
 	return jwt, nil
 }
 
-func base64UrlEncode(data []byte) string {
+func Base64UrlEncode(data []byte) string {
 	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(data)
 }
