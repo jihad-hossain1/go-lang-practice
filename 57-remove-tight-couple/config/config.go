@@ -2,10 +2,13 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
+
+var configuration *Config
 
 type Config struct {
 	Version      string
@@ -13,8 +16,6 @@ type Config struct {
 	HttpPort     int
 	JwtSecretKey string
 }
-
-var configuration Config = Config{}
 
 func loadConfig() {
 	err := godotenv.Load()
@@ -53,7 +54,7 @@ func loadConfig() {
 		fmt.Println("Jwt secret key required")
 	}
 
-	configuration = Config{
+	configuration = &Config{
 		Version:      version,
 		ServiceName:  serviceName,
 		HttpPort:     int(port),
@@ -62,7 +63,11 @@ func loadConfig() {
 
 }
 
-func GetConfig() Config {
-	loadConfig()
+func GetConfig() *Config {
+	if configuration == nil {
+		// first time load config
+		loadConfig()
+	}
+	// second time
 	return configuration
 }
