@@ -1,8 +1,6 @@
 package user
 
 import (
-	"ecom/config"
-	"ecom/database"
 	"ecom/util"
 	"encoding/json"
 	"fmt"
@@ -15,27 +13,30 @@ type ReqLogin struct {
 }
 
 func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
-	var reqLogin ReqLogin
+	var req ReqLogin
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&reqLogin)
+	err := decoder.Decode(&req)
 
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, "Invalid Request Data ", http.StatusBadRequest)
 	}
 
-	usr := database.Find(reqLogin.Email, reqLogin.Password)
+	usr, err := h.userRepo.Find(req.Email, req.Password)
+	if err != nil {
+		util.SendError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
 	if usr == nil {
 		http.Error(w, "Invalid credential", http.StatusBadRequest)
+		return
 	}
-
-	cnf := config.GetConfig()
 
 	accessToken, err := util.CreateJwt(util.Payload{
 		Sub:       usr.ID,
 		FirstName: usr.FirstName,
 		Email:     usr.Email,
-	}, cnf.JwtSecretKey)
+	}, h.cnf.JwtSecretKey)
 
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
