@@ -2,17 +2,18 @@ package user
 
 import (
 	"ecom/config"
-	"ecom/repo"
 )
 
 type Handler struct {
-	cnf      *config.Config
-	userRepo repo.UserRepo
+	cnf *config.Config
+	// userRepo repo.UserRepo
+	svc Service
 }
 
-func NewHandler(cnf *config.Config, userRepo repo.UserRepo) *Handler {
+func NewHandler(cnf *config.Config, svc Service) *Handler {
 	return &Handler{
-		cnf:      cnf,
-		userRepo: userRepo,
+		cnf: cnf,
+		svc: svc,
+		// userRepo: userRepo,
 	}
 }

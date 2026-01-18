@@ -3,23 +3,15 @@ package repo
 import (
 	// "database/sql"
 	"database/sql"
+	"ecom/domain"
+	"ecom/user"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type User struct {
-	ID          int    `db:"id" json:"id"`
-	FirstName   string `db:"first_name" json:"firstName"`
-	LastName    string `db:"last_name" json:"lastName"`
-	Email       string `db:"email" json:"email"`
-	Password    string `db:"password" json:"password"`
-	IsShopOwner bool   `db:"is_shop_owner" json:"isShopOwner"`
-}
-
 type UserRepo interface {
-	Create(usr User) (*User, error)
-	Find(email, pass string) (*User, error)
+	user.UserRepo
 }
 
 type userRepo struct {
@@ -32,7 +24,7 @@ func NewUserRepo(dbCon *sqlx.DB) UserRepo {
 	}
 }
 
-func (r userRepo) Create(usr User) (*User, error) {
+func (r userRepo) Create(usr domain.User) (*domain.User, error) {
 	query := `
 INSERT INTO users (
     first_name,
@@ -64,17 +56,7 @@ RETURNING id;
 	return &usr, nil
 }
 
-// func (r userRepo) Find(email, pass string) (*User, error) {
-// 	for _, u := range r.users {
-// 		if u.Email == email && u.Password == pass {
-// 			return &u, nil
-// 		}
-// 	}
-
-// 	return nil, nil
-// }
-
-func (r userRepo) Find(email, pass string) (*User, error) {
+func (r userRepo) Find(email, pass string) (*domain.User, error) {
 	query := `
 	SELECT
 		id, first_name, last_name, email, password, is_shop_owner
@@ -83,7 +65,7 @@ func (r userRepo) Find(email, pass string) (*User, error) {
 	LIMIT 1;
 	`
 
-	var user User
+	var user domain.User
 	err := r.dbCon.Get(&user, query, email, pass)
 	if err != nil {
 		if err == sql.ErrNoRows {

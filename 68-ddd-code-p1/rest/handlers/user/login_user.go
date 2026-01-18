@@ -22,13 +22,13 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid Request Data ", http.StatusBadRequest)
 	}
 
-	usr, err := h.userRepo.Find(req.Email, req.Password)
+	usr, err := h.svc.Find(req.Email, req.Password)
 	if err != nil {
 		util.SendError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	if usr == nil {
-		http.Error(w, "Invalid credential", http.StatusBadRequest)
+		util.SendError(w, http.StatusBadRequest, "Invalid email or password")
 		return
 	}
 
