@@ -1,13 +1,11 @@
 package product
 
 import (
+	"ecom/domain"
 	"ecom/util"
 	"net/http"
 	"strconv"
-	"sync"
 )
-
-var cnt int64
 
 func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 
@@ -16,7 +14,7 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 	limitAsStr := reqQuery.Get("limit")
 
 	page, _ := strconv.ParseInt(pageAsStr, 10, 32)
-	limit , _:= strconv.ParseInt(limitAsStr, 10, 32)
+	limit, _ := strconv.ParseInt(limitAsStr, 10, 32)
 
 	if page == 0 {
 		page = 1
@@ -26,55 +24,32 @@ func (h *Handler) GetProducts(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 
+	// products are using go channel
+	prdCh := make(chan []*domain.Product)
+	go func() {
+		productList, err := h.svc.List(page, limit)
+		if err != nil {
+			util.SendError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
 
-	productList, err := h.svc.List(page, limit)
-	if err != nil {
-		util.SendError(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	func ()  {
-		defer wg.Done()
-
-	cnt1, err := h.svc.Count()
-	if err != nil {
-		util.SendError(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}	
-
- 	cnt = cnt1
+		prdCh <- productList
 	}()
 
-	wg.Add(1)
-	func ()  {
-		defer wg.Done()
+	cntCh := make(chan int64)
+	go func() {
+		cnt, err := h.svc.Count()
+		if err != nil {
+			util.SendError(w, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
 
-	cnt2, err := h.svc.Count()
-	if err != nil {
-		util.SendError(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}	
+		cntCh <- cnt
 
- 	cnt = cnt2
 	}()
 
-	wg.Add(1)
-	func ()  {
-		defer wg.Done()
+	pdctList := <-prdCh
+	cnt := <-cntCh
 
-	cnt2, err := h.svc.Count()
-	if err != nil {
-		util.SendError(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}	
-
- 	cnt = cnt2
-	}()
-
-	wg.Wait()
-
-	util.SendPage(w, productList, page, limit, cnt)
+	util.SendPage(w, pdctList, page, limit, cnt)
 }
